@@ -1,0 +1,7 @@
+{
+  "name": "lwf-smc-transcriber",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LWF Social Media Cell — audio se Urdu transcript, edit aur save ke sath.",
+  "engines": { "node": ">=18" }
+}
