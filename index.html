@@ -280,7 +280,6 @@
 
   async function downloadYouTubeAudio(ytUrl) {
     updateProgress(20, 'یوٹیوب لنک پروسیس ہو رہا ہے...');
-    
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = ytUrl.match(regExp);
     const videoId = (match && match[2].length === 11) ? match[2] : null;
@@ -316,16 +315,13 @@
     }
 
     if (!audioUrl) {
-      throw new Error('یوٹیوب سے آڈیو فچ نہیں ہو سکی۔ براہِ کرم MP3 فائل ڈاون لوڈ کر کے ڈریگ اینڈ ڈراپ کریں۔');
+      throw new Error('یوٹیوب سے آڈیو ڈائریکٹ فچ نہیں ہو سکی۔ براہِ کرم فائل اپلوڈ کریں۔');
     }
 
-    updateProgress(70, 'آڈیو بفر ڈاوٴنلوڈ ہو رہا ہے...');
-    
+    updateProgress(60, 'آڈیو ڈاؤن لوڈ ہو رہی ہے...');
     const audioFetch = await fetch(audioUrl);
-    if (!audioFetch.ok) {
-      throw new Error('آڈیو اسٹریم حاصل کرنے میں ناکامی ہوئی۔');
-    }
-
+    if (!audioFetch.ok) throw new Error('آڈیو ڈاون لوڈ نہیں ہو سکی۔');
+    
     return await audioFetch.blob();
   }
 
@@ -349,22 +345,33 @@
         loadAudioSource(URL.createObjectURL(currentBlob));
       }
 
-      updateProgress(85, 'آڈیو ٹرانسکرائب کرنے کے لیے بھیجی جا رہی ہے...');
-      
-      const formData = new FormData();
-      formData.append('file', currentBlob, 'audio.mp3');
-      formData.append('language', document.getElementById('langSelect').value);
+      updateProgress(75, 'آڈیو کا باؤنڈری ڈیٹا تیار کیا جا رہا ہے...');
 
-      const response = await fetch(WORKER_URL, {
+      // Convert Blob/File to raw ArrayBuffer for Cloudflare Worker Whisper Model
+      const arrayBuffer = await currentBlob.arrayBuffer();
+      const selectedLang = document.getElementById('langSelect').value;
+      
+      // Target URL with parameters
+      let targetWorkerUrl = WORKER_URL;
+      if (selectedLang !== 'auto') {
+        targetWorkerUrl += (targetWorkerUrl.includes('?') ? '&' : '?') + `language=${selectedLang}`;
+      }
+
+      updateProgress(85, 'ورکر کو آڈیو بھیجی جا رہی ہے...');
+
+      const response = await fetch(targetWorkerUrl, {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': currentBlob.type || 'audio/mpeg'
+        },
+        body: arrayBuffer
       });
 
       if (!response.ok) {
-        throw new Error(`سرور سے جواب موصول نہیں ہوا۔ (Status: ${response.status})`);
+        throw new Error(`ورکر سے رسپانس حاصل نہیں ہوا۔ (Code: ${response.status})`);
       }
 
-      updateProgress(95, 'جواب کی فارمیٹنگ کی جا رہی ہے...');
+      updateProgress(95, 'ٹرانسکرپشن پراسیس ہو رہی ہے...');
       const result = await response.json();
 
       if (result.error) {
@@ -376,7 +383,7 @@
       } else if (result.text) {
         transcriptData = [{ start: 0, end: audioElement.duration || 0, text: result.text }];
       } else {
-        throw new Error('ٹرانسکرپشن میں کوئی متن موصول نہیں ہوا۔');
+        throw new Error('متن موصول نہیں ہوا۔ آڈیو کی آواز چیک کریں۔');
       }
 
       updateProgress(100, 'مکمل ہو گیا!');
@@ -384,7 +391,7 @@
       renderTranscript(transcriptData);
 
     } catch (err) {
-      showError(err.message || 'ٹرانسکرپشن کے دوران ایک غیر متوقع خرابی پیش آئی۔');
+      showError(err.message || 'ٹرانسکرپشن میں ناکامی ہوئی، براہِ کرم دوبارہ کوشش کریں۔');
     } finally {
       startBtn.disabled = false;
     }
