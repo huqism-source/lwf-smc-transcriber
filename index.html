@@ -51,7 +51,7 @@
   html[lang="ur"] .num,html[lang="ur"] .tm,html[lang="ur"] .jump{font-family:var(--ui)}
   .wrap{max-width:900px;margin:0 auto;padding:16px 14px 70px}
 
-  /* ============ hero (dono themes mein gehra rehta hai) ============ */
+  /* ============ hero ============ */
   .hero{
     position:relative;overflow:hidden;border-radius:18px;
     background:linear-gradient(160deg,#14375C 0%,#0B1D31 55%,#061523 100%);
@@ -216,7 +216,7 @@
       <button class="sw" id="themeSw" title="Theme">🌙</button>
     </div>
     <div class="hero-in">
-      <div class="crest"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAEAAElEQVR42uydd5hdR3n/PzNz2q3bq3ZXvVdLluVesbEBY4MdwBB6SCOkEFp+SYCQhAABQgiEFjBgmoHgDu5dtizJktW7VmW1vd9+yszvj3NXFsYQQrFkonme80he6+6995x5v/N9v28TnF6n8hLVS1b/2wDRL/GaJJAAstUrA6QAr/q7aqv/7rlrvPr7K0C+ek1WrxJQBPT/8P7qhN+tq5/ZnH6Up+4GO71OLWN/rvE8379rANqATqAL6ADaq1dd9cpWgcAB7BNA5JddGgiBAChUQWAcGAX6gWNAD3AEOAr0ASF/B6CeC2KnQeE0AJy+9ycYxs872euBGcBCYFH1mlk1+IZf4T3Nc/78efvhV9kXY1VQ6AZ2ATuBHcAhYPgXMIXTLOE0APyfut9TJ+FzDd4G5gBnAGdWrznVk/4XndL65xiv+A08Z/MLwGPqT/k/sIsB4ACwCdhQ/XM/UH4eQPhFzOf0Og0AL8olq/fZPMd/ltWT/RzgAuCsqsFbz/M7ourrn+smnCrPzzwPvRcnGPVzQesgsB54DHiyyhaCX+KenV6nAeBFddI/dwO3AOcCL6ka/cLnMfgTjV3+Djwjc8Kp/nygYIDdwFrgfuDxqitx4r1Uz2E7p9dpAHjRGP1M4ArgZcB5z+O7R8/RBH7Xn8lzRcDnAsJ4lRX8GLgH2Pc8zOC0m3AaAE4pii+JFfOp1QVcBbwKOJ84BPdcv13+HzH4XxYQ9PMwh` alt="Crest"></div>
+      <div class="crest"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAEAAElEQVR42uydd5hdR3n/PzNz2q3bq3ZXvVdLluVesbEBY4MdwBB6SCOkEFp+SYCQhAABQgiEFjBgmoHgDu5dtizJktW7VmW1vd9+yszvj3NXFsYQQrFkonme80he6+6995x5v/N9v28TnF6n8hLVS1b/2wDRL/GaJJAAstUrA6QAr/q7aqv/7rlrvPr7K0C+ek1WrxJQBPT/8P7qhN+tq5/ZnH6Up+4GO71OLWN/rvE8379rANqATqAL6ADaq1dd9cpWgcAB7BNA5JddGgiBAChUQWAcGAX6gWNAD3AEOAr0ASF/B6CeC2KnQeE0AJy+9ycYxs872euBGcBCYFH1mlk1+IZf4T3Nc/78efvhV9kXY1VQ6AZ2ATuBHcAhYPgXMIXTLOE0APyfut9TJ+FzDd4G5gBnAGdWrznVk/4XndL65xiv+A08Z/MLwGPqT/k/sIsB4ACwCdhQ/XM/UH4eQPhFzOf0Og0AL8olq/fZPMd/ltWT/RzgAuCsqsFbz/M7ourrn+smnCrPzzwPvRcnGPVzQesgsB54DHiyyhaCX+KemV6nAeBFddI/dwO3AOcCL6ka/cLnMfgTjV3+Djwjc8Kp/nygYIDdwFrgfuDxqitx4r1Uz2E7p9dpAHjRGP1M4ArgZcB5z+O7R8/RBH7Xn8lzRcDnAsJ4lRX8GLgH2Pc8zOC0m3AaAE4pii+JFfOp1QVcBbwKOJ84BPdcv13+HzH4XxYQ9PMwh" alt="Crest"></div>
       <div>
         <h1 id="titleTxt">LWF SMC Transcriber</h1>
         <p id="subTxt">Smart Audio & Video Transcription Engine</p>
@@ -357,21 +357,16 @@
     hideProgress();
   }
 
-  // Handle YouTube Audio Download via Cobalt API
+  // Handle YouTube Audio Download via Internal Vercel Proxy Endpoint (/api/fetch-audio)
   async function downloadYouTubeAudio(ytUrl) {
     updateProgress(10, 'یوٹیوب آڈیو کا لنک حاصل کیا جا رہا ہے...');
     
-    const cobaltRes = await fetch('https://api.cobalt.tools/api/json', {
+    const cobaltRes = await fetch('/api/fetch-audio', {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        url: ytUrl,
-        downloadMode: 'audio',
-        audioFormat: 'mp3'
-      })
+      body: JSON.stringify({ url: ytUrl })
     });
 
     if (!cobaltRes.ok) {
