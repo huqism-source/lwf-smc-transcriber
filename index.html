@@ -357,7 +357,7 @@
     hideProgress();
   }
 
-  // Handle YouTube Audio Download via Internal Vercel Proxy Endpoint (/api/fetch-audio)
+  // Handle YouTube Audio Download via Vercel Endpoint
   async function downloadYouTubeAudio(ytUrl) {
     updateProgress(10, 'یوٹیوب آڈیو کا لنک حاصل کیا جا رہا ہے...');
     
@@ -369,13 +369,10 @@
       body: JSON.stringify({ url: ytUrl })
     });
 
-    if (!cobaltRes.ok) {
-      throw new Error('یوٹیوب آڈیو کا سورس حاصل کرنے میں ناکامی ہوئی۔ برائے مہربانی لنک چیک کریں۔');
-    }
-
     const cobaltData = await cobaltRes.json();
-    if (cobaltData.status === 'error' || !cobaltData.url) {
-      throw new Error(cobaltData.text || 'یوٹیوب آڈیو ڈاؤن لوڈ کرنے میں مسئلہ پیش آیا۔');
+
+    if (!cobaltRes.ok || cobaltData.error || !cobaltData.url) {
+      throw new Error(cobaltData.error || cobaltData.text || 'یوٹیوب آڈیو پروسیس نہیں ہو سکی۔ لنک چیک کریں۔');
     }
 
     updateProgress(25, 'آڈیو ڈاؤن لوڈ کی جا رہی ہے...');
