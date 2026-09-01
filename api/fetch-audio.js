@@ -13,11 +13,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "URL is required" });
   }
 
-  // Working Instances of Cobalt API v10+
+  // Working public Cobalt instances
   const instances = [
-    'https://api.cobalt.tools',
     'https://cobalt-api.kwiatekm.com',
-    'https://co.wuk.sh'
+    'https://co.wuk.sh',
+    'https://api.cobalt.tools'
   ];
 
   for (const instance of instances) {
@@ -26,7 +26,8 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
         },
         body: JSON.stringify({
           url: url,
@@ -37,12 +38,16 @@ export default async function handler(req, res) {
 
       if (response.ok) {
         const data = await response.json();
-        return res.status(200).json(data);
+        // Check standard cobalt response structures
+        const audioUrl = data.url || (data.picker && data.picker[0] && data.picker[0].url);
+        if (audioUrl) {
+          return res.status(200).json({ url: audioUrl });
+        }
       }
     } catch (e) {
-      continue; // Failover to next instance
+      continue;
     }
   }
 
-  return res.status(500).json({ error: "آڈیو سورس حاصل نہیں ہو سکا۔ براہ کرم دوبارہ کوشش کریں۔" });
+  return res.status(500).json({ error: "یوٹیوب آڈیو کا سورس حاصل کرنے میں ناکامی ہوئی اور تمام سرورز مصروف ہیں۔ براہ کرم کچھ دیر بعد کوشش کریں۔" });
 }
