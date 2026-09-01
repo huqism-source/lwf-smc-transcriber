@@ -15,7 +15,6 @@
     --blue:#0F76C4; --sky:#1D9BF0; --deep:#0A5D9E;
     --text:#0B2237; --muted:#5D7B96;
     --bad:#C2452A;
-    --sheen:linear-gradient(105deg,transparent 38%,rgba(29,155,240,.20) 48%,rgba(29,155,240,.05) 56%,transparent 66%);
     --shadow:0 10px 30px rgba(11,45,80,.10);
     --row-hover:rgba(29,155,240,.06);
     --row-now:rgba(29,155,240,.13);
@@ -31,7 +30,6 @@
     --blue:#1D9BF0; --sky:#7CC6FF; --deep:#0E6FB8;
     --text:#EAF4FF; --muted:#7C9AB8;
     --bad:#FF8A6B;
-    --sheen:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.28) 48%,rgba(255,255,255,.05) 56%,transparent 66%);
     --shadow:0 14px 36px rgba(0,0,0,.42);
     --row-hover:rgba(124,198,255,.06);
     --row-now:rgba(29,155,240,.16);
@@ -55,37 +53,20 @@
     border:1px solid rgba(124,198,255,.22);
     padding:20px 18px;box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.08);
   }
-  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.26) 48%,rgba(255,255,255,.05) 56%,transparent 66%);
-    transform:translateX(-120%);animation:sweep 6.5s ease-in-out infinite}
-  @keyframes sweep{0%{transform:translateX(-120%)}55%,100%{transform:translateX(120%)}}
-  .wave{position:absolute;inset:0;width:100%;height:100%;opacity:.17;pointer-events:none}
   .hero-in{position:relative;z-index:2;display:flex;align-items:center;gap:14px}
-  .crest{flex:0 0 auto;width:70px;height:70px;border-radius:50%;overflow:hidden;
-    background:radial-gradient(circle,#fff 62%,rgba(124,198,255,.25) 100%);
-    box-shadow:0 0 0 1px rgba(124,198,255,.45),0 0 24px rgba(29,155,240,.4)}
-  .crest img{width:100%;height:100%;object-fit:contain;display:block}
   .hero h1{font-family:var(--disp);font-weight:800;font-size:clamp(19px,5.2vw,28px);margin:0;
-    letter-spacing:-.02em;line-height:1.1;
-    background:linear-gradient(92deg,#FFFFFF 12%,#7CC6FF 52%,#FFFFFF 88%);background-size:220% 100%;
-    -webkit-background-clip:text;background-clip:text;color:transparent;animation:glide 7s ease-in-out infinite}
-  @keyframes glide{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+    letter-spacing:-.02em;line-height:1.1;color:#FFFFFF;}
   html[dir="rtl"] .hero h1{text-align:right}
   html[lang="ur"] .hero h1{font-family:var(--urdu);font-weight:600;letter-spacing:0;
     line-height:1.95;font-size:clamp(16px,4.4vw,23px);padding-block:2px}
   .hero p{margin:5px 0 0;font-size:11.5px;letter-spacing:.05em;color:#9DBBD6}
   .switches{position:absolute;z-index:3;top:14px;inset-inline-end:14px;display:flex;gap:6px}
   .sw{border:1px solid rgba(124,198,255,.35);background:rgba(5,16,31,.5);color:#DCEDFF;
-    border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:var(--ui);
-    backdrop-filter:blur(4px);transition:border-color .2s,background .2s}
+    border-radius:8px;font-size:12px;padding:6px 10px;cursor:pointer;font-family:var(--ui);}
 
   .card{position:relative;margin-top:16px;border-radius:14px;border:1px solid var(--edge);
     background:linear-gradient(180deg,var(--card),var(--card-2));padding:18px 16px;overflow:hidden;
     box-shadow:var(--shadow)}
-  .card::before{content:"";position:absolute;inset-block:0 auto;inset-inline:0;height:1px;
-    background:linear-gradient(90deg,transparent,var(--sky),transparent);
-    background-size:220% 100%;animation:edge 5s linear infinite}
-  @keyframes edge{0%{background-position:-110% 0}100%{background-position:110% 0}}
   .cap{font-size:11.5px;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
 
   .drop{display:block;border:1px dashed var(--edge);border-radius:11px;padding:22px 16px;text-align:center;
@@ -117,8 +98,7 @@
   .work .lbl b{color:var(--blue);font-weight:600;font-variant-numeric:tabular-nums;font-family:var(--ui)}
   .track{height:4px;border-radius:4px;background:var(--edge-soft);overflow:hidden;position:relative}
   .fill{position:absolute;inset-block:0;inset-inline-start:0;width:0;border-radius:4px;
-    background:linear-gradient(90deg,var(--deep),var(--sky),var(--deep));background-size:200% 100%;
-    animation:flow 1.8s linear infinite;transition:width .35s ease}
+    background:linear-gradient(90deg,var(--deep),var(--sky));transition:width .35s ease}
 
   .deck{display:none;align-items:center;gap:12px;margin-top:14px}
   .deck.on{display:flex}
@@ -299,28 +279,54 @@
   }
 
   async function downloadYouTubeAudio(ytUrl) {
-    updateProgress(10, 'یوٹیوب آڈیو کا لنک حاصل کیا جا رہا ہے...');
+    updateProgress(20, 'یوٹیوب لنک پروسیس ہو رہا ہے...');
     
-    const cobaltRes = await fetch('/api/fetch-audio', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: ytUrl })
-    });
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = ytUrl.match(regExp);
+    const videoId = (match && match[2].length === 11) ? match[2] : null;
 
-    const cobaltData = await cobaltRes.json();
-
-    if (!cobaltRes.ok || cobaltData.error || !cobaltData.url) {
-      throw new Error(cobaltData.error || 'یوٹیوب آڈیو پروسیس نہیں ہو سکی۔ لنک چیک کریں۔');
+    if (!videoId) {
+      throw new Error('یوٹیوب کا لنک درست نہیں ہے۔');
     }
 
-    updateProgress(25, 'آڈیو ڈاؤن لوڈ کی جا رہی ہے...');
-    const audioRes = await fetch(cobaltData.url);
-    if (!audioRes.ok) {
-      throw new Error('آڈیو فائل ڈاؤن لوڈ نہیں ہو سکی۔');
+    updateProgress(40, 'آڈیو کا سورس فچ کیا جا رہا ہے...');
+
+    const instances = [
+      `https://inv.tux.stream/api/v1/videos/${videoId}`,
+      `https://invidious.nerdvpn.de/api/v1/videos/${videoId}`,
+      `https://invidious.drgns.space/api/v1/videos/${videoId}`
+    ];
+
+    let audioUrl = null;
+
+    for (const inst of instances) {
+      try {
+        const res = await fetch(inst);
+        if (res.ok) {
+          const data = await res.json();
+          const audioStreams = data.adaptiveFormats.filter(f => f.mimeType && f.mimeType.includes('audio'));
+          if (audioStreams.length > 0) {
+            audioUrl = audioStreams[0].url;
+            break;
+          }
+        }
+      } catch (e) {
+        continue;
+      }
     }
 
-    updateProgress(50, 'آڈیو پراسیس کی جا رہی ہے...');
-    return await audioRes.blob();
+    if (!audioUrl) {
+      throw new Error('یوٹیوب سے آڈیو فچ نہیں ہو سکی۔ براہِ کرم MP3 فائل ڈاون لوڈ کر کے ڈریگ اینڈ ڈراپ کریں۔');
+    }
+
+    updateProgress(70, 'آڈیو بفر ڈاوٴنلوڈ ہو رہا ہے...');
+    
+    const audioFetch = await fetch(audioUrl);
+    if (!audioFetch.ok) {
+      throw new Error('آڈیو اسٹریم حاصل کرنے میں ناکامی ہوئی۔');
+    }
+
+    return await audioFetch.blob();
   }
 
   startBtn.addEventListener('click', async () => {
@@ -343,7 +349,7 @@
         loadAudioSource(URL.createObjectURL(currentBlob));
       }
 
-      updateProgress(65, 'آڈیو ٹرانسکرائب کرنے کے لیے بھیجی جا رہی ہے...');
+      updateProgress(85, 'آڈیو ٹرانسکرائب کرنے کے لیے بھیجی جا رہی ہے...');
       
       const formData = new FormData();
       formData.append('file', currentBlob, 'audio.mp3');
@@ -358,7 +364,7 @@
         throw new Error(`سرور سے جواب موصول نہیں ہوا۔ (Status: ${response.status})`);
       }
 
-      updateProgress(90, 'جواب کی فارمیٹنگ کی جا رہی ہے...');
+      updateProgress(95, 'جواب کی فارمیٹنگ کی جا رہی ہے...');
       const result = await response.json();
 
       if (result.error) {
@@ -421,7 +427,7 @@
     scriptContainer.innerHTML = '';
     let totalWords = 0;
 
-    data.forEach((item, idx) => {
+    data.forEach((item) => {
       const words = item.text.trim().split(/\s+/).filter(Boolean);
       totalWords += words.length;
 
@@ -534,9 +540,7 @@
     const rows = scriptContainer.querySelectorAll('.row');
     rows.forEach(row => {
       const text = row.querySelector('.t').textContent.toLowerCase();
-      if (!q) {
-        row.style.display = '';
-      } else if (text.includes(q)) {
+      if (!q || text.includes(q)) {
         row.style.display = '';
       } else {
         row.style.display = 'none';
