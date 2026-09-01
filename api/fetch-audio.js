@@ -6,7 +6,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Cobalt API request for audio
     const cobaltRes = await fetch("https://api.cobalt.tools/", {
       method: "POST",
       headers: {
@@ -28,17 +27,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // Audio stream/file fetch kar ke client ko bhejna
-    const audioStream = await fetch(data.url);
-    
-    res.setHeader("Content-Type", "audio/mpeg");
-    const arrayBuffer = await audioStream.arrayBuffer();
-    return res.status(200).send(Buffer.from(arrayBuffer));
+    // Direct Cobalt Audio URL return karein Vercel timeout se bachne ke liye
+    return res.status(200).json({ audioUrl: data.url });
 
   } catch (error) {
     console.error("Cobalt Fetch Error:", error);
     return res.status(500).json({ 
-      error: "Audio fetch karne mein masla aaya. Wajah: " + error.message 
+      error: "Audio fetch karne mein masla aaya: " + error.message 
     });
   }
 }
