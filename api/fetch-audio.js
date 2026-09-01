@@ -1,39 +1,37 @@
 export default async function handler(req, res) {
-  const { url } = req.query;
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const { url } = req.body || {};
 
   if (!url) {
-    return res.status(400).json({ error: "URL zaroori hai" });
+    return res.status(400).json({ error: "URL is required" });
   }
 
   try {
-    const cobaltRes = await fetch("https://api.cobalt.tools/", {
-      method: "POST",
+    const response = await fetch('https://api.cobalt.tools/api/json', {
+      method: 'POST',
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         url: url,
-        downloadMode: "audio",
-        audioFormat: "mp3"
+        downloadMode: 'audio',
+        audioFormat: 'mp3'
       })
     });
 
-    const data = await cobaltRes.json();
-
-    if (data.status === "error" || !data.url) {
-      return res.status(400).json({ 
-        error: "Video se audio nahi mila. Link check karein ya direct upload karein." 
-      });
-    }
-
-    // Direct Cobalt Audio URL return karein Vercel timeout se bachne ke liye
-    return res.status(200).json({ audioUrl: data.url });
-
+    const data = await response.json();
+    return res.status(200).json(data);
   } catch (error) {
-    console.error("Cobalt Fetch Error:", error);
-    return res.status(500).json({ 
-      error: "Audio fetch karne mein masla aaya: " + error.message 
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
