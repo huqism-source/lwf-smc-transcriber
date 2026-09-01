@@ -222,11 +222,22 @@
 
   <section class="card">
     <p class="cap" data-k="capAudio"></p>
-    <label class="drop">
+
+    <div class="opts" style="margin-top:0;margin-bottom:12px">
+      <button class="btn on" id="srcFileBtn" type="button" data-k="srcFile"></button>
+      <button class="btn" id="srcLinkBtn" type="button" data-k="srcLink"></button>
+    </div>
+
+    <label class="drop" id="dropWrap">
       <input type="file" id="media" accept="audio/*,video/*" />
       <b data-k="dropTitle"></b>
       <span data-k="dropSub"></span>
     </label>
+
+    <div id="linkWrap" style="display:none">
+      <input class="find" id="ytUrl" type="url" style="width:100%;box-sizing:border-box;padding:12px" />
+    </div>
+
     <div class="picked" id="picked"></div>
 
     <div class="opts">
@@ -279,8 +290,13 @@ const STR = {
     title:"ایل ڈبلیو ایف سوشل میڈیا سیل ٹرانسکرائبر",
     sub:"لاثانی ویلفیئر فاؤنڈیشن (رجسٹرڈ) انٹرنیشنل",
     capAudio:"آڈیو فائل",
+    srcFile:"فائل اپ لوڈ کریں",
+    srcLink:"یوٹیوب لنک",
     dropTitle:"آڈیو فائل منتخب کریں",
     dropSub:"mp3 · m4a · wav · ogg — آواز سے متن بن جائے گا",
+    linkPlaceholder:"یوٹیوب ویڈیو کا لنک یہاں لگائیں",
+    fetchingLink:"یوٹیوب سے آواز نکالی جا رہی ہے…",
+    noLink:"پہلے یوٹیوب لنک لگائیں۔",
     make:"متن بنائیں",
     capScript:"متن — کسی بھی سطر پر ٹیپ کر کے درست کریں",
     time:"وقت", scroll:"خودکار اسکرول", copy:"کاپی", copied:"کاپی ہو گیا", copyFail:"کاپی نہیں ہوا",
@@ -303,8 +319,13 @@ const STR = {
     title:"LWF Social Media Cell Transcriber",
     sub:"Lasani Welfare Foundation (Reg.) International",
     capAudio:"Audio file",
+    srcFile:"Upload file",
+    srcLink:"YouTube link",
     dropTitle:"Choose an audio file",
     dropSub:"mp3 · m4a · wav · ogg — speech becomes text",
+    linkPlaceholder:"Paste a YouTube video link here",
+    fetchingLink:"Fetching audio from YouTube…",
+    noLink:"Paste a YouTube link first.",
     make:"Create transcript",
     capScript:"Transcript — tap any line to correct it",
     time:"Time", scroll:"Auto-scroll", copy:"Copy", copied:"Copied", copyFail:"Copy failed",
@@ -336,6 +357,7 @@ function applyUI(){
     if (typeof v === "string") el.textContent = v;
   });
   $("find").placeholder = d.find;
+  $("ytUrl").placeholder = d.linkPlaceholder;
   $("langSw").textContent = UI === "ur" ? "EN" : "اردو";
   const sel = $("tlang"), keep = sel.value || "ur";
   sel.innerHTML = d.langs.map(([v, n]) => '<option value="' + v + '">' + n + "</option>").join("");
@@ -356,6 +378,28 @@ $("themeSw").onclick = () => { theme = theme === "light" ? "dark" : "light"; app
 let segments = [], activeIdx = -1, ticker = null;
 let autoScroll = true, showStamps = true, lang = "ur";
 let mediaFile = null, mediaUrl = null, editing = false;
+let sourceMode = "file";
+
+/* ---------- source toggle (file vs YouTube link) ---------- */
+const isYouTubeUrl = (u) => /^(https?:\/\/)?(www\.)?(m\.)?(youtube\.com|youtu\.be)\//i.test(u.trim());
+function updateMakeEnabled(){
+  $("make").disabled = sourceMode === "file" ? !mediaFile : !isYouTubeUrl($("ytUrl").value || "");
+}
+$("srcFileBtn").onclick = () => {
+  sourceMode = "file";
+  $("srcFileBtn").classList.add("on"); $("srcLinkBtn").classList.remove("on");
+  $("dropWrap").style.display = ""; $("linkWrap").style.display = "none";
+  mediaFile = null; $("picked").textContent = "";
+  updateMakeEnabled();
+};
+$("srcLinkBtn").onclick = () => {
+  sourceMode = "link";
+  $("srcLinkBtn").classList.add("on"); $("srcFileBtn").classList.remove("on");
+  $("dropWrap").style.display = "none"; $("linkWrap").style.display = "";
+  mediaFile = null; $("picked").textContent = "";
+  updateMakeEnabled();
+};
+$("ytUrl").addEventListener("input", () => { mediaFile = null; $("picked").textContent = ""; updateMakeEnabled(); });
 
 /* ---------- header waveform ---------- */
 (function drawWave(){
@@ -505,7 +549,38 @@ async function toMono16k(file){
   return (await off.startRendering()).getChannelData(0);
 }
 
+async function fetchFromYouTube(url){
+  $("make").disabled = true;
+  hush();
+  progress(3, T().fetchingLink);
+  const r = await fetch("/api/fetch-audio?url=" + encodeURIComponent(url));
+  if (!r.ok) {
+    let msg = T().stopped;
+    try { const data = await r.json(); if (data && data.message) msg = data.message; } catch (e) {}
+    throw new Error(msg);
+  }
+  const blob = await r.blob();
+  const titleHeader = r.headers.get("X-Video-Title");
+  const title = titleHeader ? decodeURIComponent(titleHeader) : "youtube-audio";
+  const file = new File([blob], title.replace(/[\\/:*?"<>|]/g, "_") + ".webm", { type: blob.type || "audio/webm" });
+  mediaFile = file;
+  $("picked").textContent = file.name + "  ·  " + (file.size/1048576).toFixed(1) + " MB";
+  return file;
+}
+
 async function run(){
+  if (sourceMode === "link" && !mediaFile) {
+    const url = ($("ytUrl").value || "").trim();
+    if (!isYouTubeUrl(url)) { say("<b>" + T().noLink + "</b>", true); return; }
+    try {
+      await fetchFromYouTube(url);
+    } catch (err) {
+      $("work").className = "work";
+      say("<b>" + (err.message || T().stopped) + "</b>", true);
+      updateMakeEnabled();
+      return;
+    }
+  }
   if (!mediaFile) return;
   hush();
   lang = $("tlang").value;
