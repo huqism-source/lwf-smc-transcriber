@@ -5,6 +5,6 @@
   "description": "LWF Social Media Cell — audio se Urdu transcript, edit aur save ke sath.",
   "engines": { "node": ">=18" },
   "dependencies": {
-    "youtubei.js": "latest"
+    "@distube/ytdl-core": "^4.15.8"
   }
 }
